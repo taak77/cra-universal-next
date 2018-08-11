@@ -2,6 +2,7 @@ import React from 'react';
 import { render, hydrate } from 'react-dom';
 import { Provider } from 'react-redux';
 import { ConnectedRouter } from 'connected-react-router';
+import Loadable from 'react-loadable';
 import createStore from './store';
 import 'normalize.css/normalize.css';
 import './index.css';
@@ -19,7 +20,9 @@ const Application = (
 );
 
 if (process.env.NODE_ENV === 'production') {
-	hydrate(Application, root);
+	Loadable.preloadReady().then(() => {
+		hydrate(Application, root);
+	});
 } else {
 	render(Application, root);
 }

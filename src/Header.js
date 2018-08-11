@@ -11,9 +11,6 @@ const navRoutes = [
 ];
 
 class Header extends Component {
-	componentWillMount() {
-
-	}
 	render() {
 		return (
 			<header className={styles.container}>

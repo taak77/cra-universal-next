@@ -8,7 +8,9 @@ import React from 'react';
 import { renderToString } from 'react-dom/server';
 import { Provider } from 'react-redux';
 import { StaticRouter } from 'react-router-dom';
-// import manifest from '../build/asset-manifest.json';
+import Loadable from 'react-loadable';
+import { getBundles } from 'react-loadable/webpack';
+import stats from '../build/react-loadable.json';
 import createStore from '../src/store';
 import App from '../src/App';
 
@@ -21,12 +23,14 @@ app.use(morgan('dev'));
 
 app.use(express.static(path.resolve(__dirname, '../build')));
 
-const injectHTML = (data, { html, title, meta, body, scripts = [], state }) => {
+const injectHTML = (data, { html, title, meta, body, state, bundles = [] }) => {
+	console.log('bundles', bundles)
+	const bundleScripts = bundles.map(bundle => `<script src="${bundle.publicPath}"></script>`).join('');
 	data = data.replace(
 		'<div id="root"></div>',
 		`<div id="root">${body}</div><script>window.__INITIAL_STATE__ = ${state}</script>`
 	);
-	data = data.replace('</body>', scripts.join('') + '</body>');
+	//data = data.replace('</body>', bundleScripts + '</body>');
 
 	return data;
 };
@@ -49,31 +53,32 @@ router.get('*', (req, res) => {
 			const { store } = createStore(req.url);
 
 			const context = {};
+			const modules = [];
 			const markup = renderToString(
-				<Provider store={store}>
-					<StaticRouter
-						location={req.url}
-						context={context}
-					>
-						<App/>
-					</StaticRouter>
-				</Provider>
+				<Loadable.Capture report={moduleName => modules.push(moduleName)}>
+					<Provider store={store}>
+						<StaticRouter
+							location={req.url}
+							context={context}
+						>
+							<App/>
+						</StaticRouter>
+					</Provider>
+				</Loadable.Capture>
 			);
-console.log('markup', renderToString(<StaticRouter
-	location={req.url}
-	context={context}
->
-	<App/>
-</StaticRouter>))
+
 			if (context.url) {
 				res.writeHead(301, {
 					Location: context.url
 				});
 				res.end();
 			} else {
+				const bundles = getBundles(stats, modules).filter(bundle => (/\.(map|css)$/.exec(bundle.publicPath) === null));
+
 				const html = injectHTML(htmlData, {
 					body: markup,
-					state: JSON.stringify(store.getState()).replace(/</g, '\\u003c')
+					state: JSON.stringify(store.getState()).replace(/</g, '\\u003c'),
+					bundles
 				});
 
 				// We have all the final HTML, let's send it to the user already!
@@ -84,10 +89,12 @@ console.log('markup', renderToString(<StaticRouter
 });
 
 const port = process.env.PORT || 3000;
-app.listen(port, (err) => {
-	if (err) {
-		console.error(err);
-	}
+Loadable.preloadAll().then(() => {
+	app.listen(port, (err) => {
+		if (err) {
+			console.error(err);
+		}
 
-	console.log(`App listening on port ${port}`);
+		console.log(`App listening on port ${port}`);
+	});
 });
