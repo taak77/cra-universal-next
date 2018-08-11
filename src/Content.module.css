@@ -1,0 +1,7 @@
+/*@value header: './Header.module.css';
+@value headerHeight from header;*/
+
+.container {
+    padding: 20px;
+    margin-top: 60px;
+}
