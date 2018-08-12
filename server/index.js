@@ -1,5 +1,6 @@
 const md5File = require('md5-file');
 const path = require('path');
+require('isomorphic-fetch');
 
 // CSS styles will be imported on load and that complicates matters... ignore those bad boys!
 const ignoreStyles = require('ignore-styles');

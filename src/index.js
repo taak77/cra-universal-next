@@ -3,6 +3,7 @@ import { render, hydrate } from 'react-dom';
 import { Provider } from 'react-redux';
 import { ConnectedRouter } from 'connected-react-router';
 import Loadable from 'react-loadable';
+import { Frontload } from 'react-frontload';
 import createStore from './store';
 import 'normalize.css/normalize.css';
 import './index.css';
@@ -14,7 +15,9 @@ const root = document.getElementById('root');
 const Application = (
 	<Provider store={store}>
 		<ConnectedRouter history={history}>
-			<App />
+			<Frontload noServerRender>
+				<App />
+			</Frontload>
 		</ConnectedRouter>
 	</Provider>
 );

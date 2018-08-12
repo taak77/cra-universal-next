@@ -9,9 +9,11 @@ import { renderToString } from 'react-dom/server';
 import { Provider } from 'react-redux';
 import { StaticRouter } from 'react-router-dom';
 import Loadable from 'react-loadable';
+import { Frontload, frontloadServerRender } from 'react-frontload';
 import { getBundles } from 'react-loadable/webpack';
 import stats from '../build/react-loadable.json';
 import createStore from '../src/store';
+import { fetchBootstrap } from '../src/actions/app';
 import App from '../src/App';
 
 const app = express();
@@ -24,7 +26,7 @@ app.use(morgan('dev'));
 app.use(express.static(path.resolve(__dirname, '../build')));
 
 const injectHTML = (data, { html, title, meta, body, state, bundles = [] }) => {
-	console.log('bundles', bundles)
+	// CRA adds bundles itself, so it's currently unnecessary
 	const bundleScripts = bundles.map(bundle => `<script src="${bundle.publicPath}"></script>`).join('');
 	data = data.replace(
 		'<div id="root"></div>',
@@ -54,36 +56,40 @@ router.get('*', (req, res) => {
 
 			const context = {};
 			const modules = [];
-			const markup = renderToString(
-				<Loadable.Capture report={moduleName => modules.push(moduleName)}>
-					<Provider store={store}>
-						<StaticRouter
-							location={req.url}
-							context={context}
-						>
-							<App/>
-						</StaticRouter>
-					</Provider>
-				</Loadable.Capture>
-			);
+			frontloadServerRender(() =>
+				renderToString(
+					<Loadable.Capture report={moduleName => modules.push(moduleName)}>
+						<Provider store={store}>
+							<StaticRouter
+								location={req.url}
+								context={context}
+							>
+								<Frontload isServer>
+									<App/>
+								</Frontload>
+							</StaticRouter>
+						</Provider>
+					</Loadable.Capture>
+				)
+			).then(markup => {
+				if (context.url) {
+					res.writeHead(301, {
+						Location: context.url
+					});
+					res.end();
+				} else {
+					const bundles = getBundles(stats, modules).filter(bundle => (/\.(map|css)$/.exec(bundle.publicPath) === null));
 
-			if (context.url) {
-				res.writeHead(301, {
-					Location: context.url
-				});
-				res.end();
-			} else {
-				const bundles = getBundles(stats, modules).filter(bundle => (/\.(map|css)$/.exec(bundle.publicPath) === null));
+					const html = injectHTML(htmlData, {
+						body: markup,
+						state: JSON.stringify(store.getState()).replace(/</g, '\\u003c'),
+						bundles
+					});
 
-				const html = injectHTML(htmlData, {
-					body: markup,
-					state: JSON.stringify(store.getState()).replace(/</g, '\\u003c'),
-					bundles
-				});
-
-				// We have all the final HTML, let's send it to the user already!
-				res.send(html);
-			}
+					// We have all the final HTML, let's send it to the user already!
+					res.send(html);
+				}
+			});
 		}
 	);
 });

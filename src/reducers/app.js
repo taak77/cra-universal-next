@@ -1,11 +1,11 @@
-import { INIT } from '../actions/app';
+import { INIT_APP } from '../actions/app';
 
 export default function appReducer(state = {}, action) {
 	switch(action.type) {
-		case INIT:
+		case INIT_APP:
 			return {
 				...state,
-				data: action.data
+				...action.data
 			};
 		default:
 			return state;
