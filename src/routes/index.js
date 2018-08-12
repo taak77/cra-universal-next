@@ -22,11 +22,19 @@ const About = Loadable({
 	loading: () => null,
 });
 
-export default () => (
+const NotFound = Loadable({
+    loader: () => import(/* webpackChunkName: "notfound" */ '../NotFound'),
+    loading: () => null,
+});
+
+const Routes = () => (
 	<Switch>
 		<Route exact path="/" component={Home} />
 		<Route path="/login" component={Login} />
 		<Route path="/signup" component={Signup} />
 		<Route path="/about" component={About} />
+        <Route component={NotFound} />
 	</Switch>
 );
+
+export default Routes;

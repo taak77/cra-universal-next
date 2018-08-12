@@ -11,6 +11,7 @@ import { StaticRouter } from 'react-router-dom';
 import Loadable from 'react-loadable';
 import { Frontload, frontloadServerRender } from 'react-frontload';
 import { getBundles } from 'react-loadable/webpack';
+import serialize from 'serialize-javascript';
 import stats from '../build/react-loadable.json';
 import createStore from '../src/store';
 import { fetchBootstrap } from '../src/actions/app';
@@ -54,42 +55,45 @@ router.get('*', (req, res) => {
 
 			const { store } = createStore(req.url);
 
-			const context = {};
-			const modules = [];
-			frontloadServerRender(() =>
-				renderToString(
-					<Loadable.Capture report={moduleName => modules.push(moduleName)}>
-						<Provider store={store}>
-							<StaticRouter
-								location={req.url}
-								context={context}
-							>
-								<Frontload isServer>
-									<App/>
-								</Frontload>
-							</StaticRouter>
-						</Provider>
-					</Loadable.Capture>
-				)
-			).then(markup => {
-				if (context.url) {
-					res.writeHead(301, {
-						Location: context.url
-					});
-					res.end();
-				} else {
-					const bundles = getBundles(stats, modules).filter(bundle => (/\.(map|css)$/.exec(bundle.publicPath) === null));
+			store.dispatch(fetchBootstrap())
+                .then(() => {
+                    const context = {};
+                    const modules = [];
+                    frontloadServerRender(() =>
+                        renderToString(
+                            <Loadable.Capture report={moduleName => modules.push(moduleName)}>
+                                <Provider store={store}>
+                                    <StaticRouter
+                                        location={req.url}
+                                        context={context}
+                                    >
+                                        <Frontload isServer>
+                                            <App/>
+                                        </Frontload>
+                                    </StaticRouter>
+                                </Provider>
+                            </Loadable.Capture>
+                        )
+                    ).then(markup => {
+                        if (context.url) {
+                            res.writeHead(301, {
+                                Location: context.url
+                            });
+                            res.end();
+                        } else {
+                            const bundles = getBundles(stats, modules).filter(bundle => (/\.(map|css)$/.exec(bundle.publicPath) === null));
 
-					const html = injectHTML(htmlData, {
-						body: markup,
-						state: JSON.stringify(store.getState()).replace(/</g, '\\u003c'),
-						bundles
-					});
+                            const html = injectHTML(htmlData, {
+                                body: markup,
+                                state: serialize(store.getState()),
+                                bundles
+                            });
 
-					// We have all the final HTML, let's send it to the user already!
-					res.send(html);
-				}
-			});
+                            // We have all the final HTML, let's send it to the user already!
+                            res.send(html);
+                        }
+                    });
+                });
 		}
 	);
 });
