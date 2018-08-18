@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import {connect} from 'react-redux';
 import {Link} from 'react-router-dom';
 import {Alert, Button, Form, FormGroup, Label, Input, Col} from 'reactstrap';
-import {signIn} from "./actions/user";
+import {signIn, updateAttributes} from "./actions/user";
 import userSelector from "./selectors/userSelector";
 import styles from './Login.module.css';
 
@@ -49,23 +49,31 @@ class Login extends Component {
         event.preventDefault();
         if (this.validate()) {
             this.props.dispatch(signIn({
-                email: this.emailInput.current.value,
+                username: this.emailInput.current.value,
                 password: this.passwordInput.current.value
             }));
         }
     };
 
+    onUpdateAttributes = (event) => {
+        event.preventDefault();
+        this.props.dispatch(updateAttributes([
+            {Name: 'preferred_username', Value: 'taoki'}
+        ]));
+    };
+
     render() {
-        const {user: {user, errorMsg}} = this.props;
+        const {user: {isLoggedIn, errorMsg}} = this.props;
         let {emailValid, passwordValid} = this.state;
         return (
             <div className="container">
-                {user ? (
+                {isLoggedIn ? (
                     <div>
                         <h2 className="h3">Log In</h2>
                         <Alert color="primary">
                             You are now logged in.
                         </Alert>
+                        <div onClick={this.onUpdateAttributes}>Add Username</div>
                     </div>
                 ) : (
                     <div>
@@ -77,7 +85,7 @@ class Login extends Component {
                         )}
                         <Form>
                             <FormGroup row>
-                                <Label for="email" sm={2}>Email</Label>
+                                <Label for="email" sm={2}>Email/Username</Label>
                                 <Col sm={10}>
                                     <Input
                                         innerRef={this.emailInput}

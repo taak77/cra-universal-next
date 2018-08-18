@@ -4,17 +4,19 @@ import {
 
 export default function userReducer(state = {
     status: 'anonymous',
-    user: null,
+    isLoggedIn: false,
     errorMsg: null
 }, action) {
 	switch(action.type) {
-		case SET_USER:
+        case SET_USER:
 			return {
-				...state,
-				status: action.status,
-                user: action.user,
-                errorMsg: action.errorMsg
-			};
+                ...state,
+                status: action.status,
+                cognitoUser: action.user,
+                attributes: action.user && action.user.attributes || undefined,
+                errorMsg: action.errorMsg,
+                isLoggedIn: action.status !== 'anonymous'
+            };
 		default:
 			return state;
 

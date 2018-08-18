@@ -28,7 +28,7 @@
     color: #fff;
 }
 
-.link:visited {
+.link, .link:visited {
     color: #fff;
 }
 

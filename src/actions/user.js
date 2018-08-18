@@ -27,14 +27,14 @@ export function getCurrentUser() {
     }
 }
 
-export function signUp({email, password}) {
+export function signUp({username, email, password}) {
     return async (dispatch) => {
         let status;
         let user;
         let errorMsg;
         try {
             status = 'unconfirmed';
-            user = await API.signUp({email, password});
+            user = await API.signUp({username, email, password});
         } catch (err) {
             status = 'anonymous';
             errorMsg = err.message;
@@ -43,14 +43,14 @@ export function signUp({email, password}) {
     }
 }
 
-export function signIn({email, password}) {
+export function signIn({username, password}) {
     return async (dispatch) => {
         let status;
         let user;
         let errorMsg;
         try {
             status = 'signedin';
-            user = await API.signIn({email, password});
+            user = await API.signIn({username, password});
         } catch (err) {
             status = 'anonymous';
             errorMsg = err.message;
@@ -67,6 +67,20 @@ export function signOut() {
         try {
             status = 'anonymous';
             user = await API.signOut();
+        } catch (err) {
+            errorMsg = err.message;
+        }
+        dispatch(setUser({status, user, errorMsg}));
+    }
+}
+
+export function updateAttributes(attributes) {
+    return async (dispatch, getState) => {
+        const status = 'signedin';
+        let {user} = userSelector(getState());
+        let errorMsg;
+        try {
+            user = await API.updateAttributes(attributes);
         } catch (err) {
             errorMsg = err.message;
         }

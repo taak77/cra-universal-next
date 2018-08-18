@@ -78,8 +78,8 @@ function getClientEnvironment(publicUrl) {
                 // images into the `src` and `import` them in code to get their paths.
                 PUBLIC_URL: publicUrl,
                 BASE_PATH: process.env.BASE_PATH || '/app',
-                COGNITO_USER_POOL_ID: 'us-west-2_re01gXeKt',
-                COGNITO_CLIENT_ID: 'nk5hq0vvlac6mftjnpu9eep9u',
+                COGNITO_USER_POOL_ID: 'us-west-2_UleSsWzDO',
+                COGNITO_CLIENT_ID: '65t662iporkrq5chl2j1uhl2d3',
             }
         );
     // Stringify all values so we can feed into Webpack DefinePlugin

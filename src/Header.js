@@ -22,11 +22,10 @@ class Header extends Component {
         this.props.dispatch(signOut());
     };
     render() {
-        const {user: {user}} = this.props;
-        console.log('Header', user);
+        const {user: {isLoggedIn, attributes: {username, email} = {}}} = this.props;
         return (
             <header className={styles.container}>
-                <img src={logo} className={styles.logo} alt="logo2" data-user={user}/>
+                <img src={logo} className={styles.logo} alt="logo2"/>
                 <ul className={styles.nav}>
                     {navRoutes.map(({to, label, exact}) => (
                         <li key={label} className={styles.navItem}>
@@ -40,24 +39,25 @@ class Header extends Component {
                             </NavLink>
                         </li>
                     ))}
-                    {user ? (
-                        <NavLink
-                            to="/login"
-                            className={styles.link}
-                            activeClassName={styles.activeLink}
-                            onClick={this.onLogout}
-                        >
-                            Log Out
-                        </NavLink>
-                    ) : (
-                        <NavLink
-                            to="/login"
-                            className={styles.link}
-                            activeClassName={styles.activeLink}
-                        >
-                            Log In
-                        </NavLink>
-                    )}
+                    <li className={styles.navItem}>
+                        {isLoggedIn ? (
+                            <NavLink
+                                to="/login"
+                                className={styles.link}
+                                onClick={this.onLogout}
+                            >
+                                Log Out ({username || email})
+                            </NavLink>
+                        ) : (
+                            <NavLink
+                                to="/login"
+                                className={styles.link}
+                                activeClassName={styles.activeLink}
+                            >
+                                Log In
+                            </NavLink>
+                        )}
+                    </li>
                 </ul>
             </header>
         );
